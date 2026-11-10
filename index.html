@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="bn" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Shobdo — Accessible Reading for Everyone. Paste any Bangla or English text, hear it read aloud with word-by-word highlighting, and adjust the text to your eyes.">
+<title>Shobdo — Accessible Reading for Everyone</title>
+<style>
+  :root {
+    --bg: #f6f4ef;
+    --fg: #1c1c1c;
+    --muted: #555555;
+    --card: #ffffff;
+    --border: #d8d2c4;
+    --accent: #0b5e4b;
+    --accent-hover: #084a3b;
+    --accent-fg: #ffffff;
+    --highlight-bg: #ffd23f;
+    --highlight-fg: #1c1c1c;
+    --read-size: 1.5rem;
+    --radius: 12px;
+  }
+  [data-theme="dark"] {
+    --bg: #16181d;
+    --fg: #f2f2f2;
+    --muted: #b9b9b9;
+    --card: #23262d;
+    --border: #3a3e47;
+    --accent: #4cc2a1;
+    --accent-hover: #6fd3b3;
+    --accent-fg: #10201a;
+    --highlight-bg: #ffd23f;
+    --highlight-fg: #1c1c1c;
+  }
+  [data-theme="contrast"] {
+    --bg: #000000;
+    --fg: #ffe600;
+    --muted: #ffe600;
+    --card: #000000;
+    --border: #ffe600;
+    --accent: #ffe600;
+    --accent-hover: #fff36b;
+    --accent-fg: #000000;
+    --highlight-bg: #ffffff;
+    --highlight-fg: #000000;
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--fg);
+    font-family: "Noto Sans Bengali", "Noto Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    line-height: 1.6;
+    font-size: 1.05rem;
+  }
+  .skip-link {
+    position: absolute;
+    left: -9999px;
+    top: 0;
+    background: var(--accent);
+    color: var(--accent-fg);
+    padding: 0.75rem 1rem;
+    z-index: 100;
+    border-radius: 0 0 8px 0;
+  }
+  .skip-link:focus { left: 0; }
+
+  :focus-visible {
+    outline: 3px solid var(--accent);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  .container { max-width: 920px; margin: 0 auto; padding: 0 1rem 3rem; }
+
+  header.hero {
+    background: var(--accent);
+    color: var(--accent-fg);
+    padding: 2rem 1rem 1.75rem;
+  }
+  header.hero .container { padding-bottom: 0; }
+  header.hero h1 { margin: 0 0 0.25rem; font-size: 2.4rem; line-height: 1.15; }
+  header.hero p { margin: 0; font-size: 1.15rem; opacity: 0.95; }
+
+  main section {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.25rem 1.25rem 1.5rem;
+    margin-top: 1.25rem;
+  }
+  h2 { margin: 0 0 0.5rem; font-size: 1.4rem; }
+  h3 { margin: 1rem 0 0.5rem; font-size: 1.1rem; }
+  p { margin: 0.5rem 0; }
+  .muted { color: var(--muted); font-size: 0.95rem; }
+
+  .about-list { margin: 0.5rem 0 0; padding-left: 1.25rem; }
+  .about-list li { margin: 0.35rem 0; }
+
+  .control-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+    align-items: center;
+  }
+  .control-group { margin-top: 1rem; }
+  .control-group > span.group-label {
+    display: block;
+    font-weight: 700;
+    margin-bottom: 0.4rem;
+  }
+
+  button, select, input[type="range"] {
+    font: inherit;
+    color: inherit;
+  }
+  button {
+    min-height: 44px;
+    padding: 0.55rem 1rem;
+    border-radius: 8px;
+    border: 2px solid var(--accent);
+    background: transparent;
+    color: var(--accent);
+    font-weight: 700;
+    cursor: pointer;
+  }
+  button:hover { background: var(--accent); color: var(--accent-fg); }
+  button.primary {
+    background: var(--accent);
+    color: var(--accent-fg);
+  }
+  button.primary:hover { background: var(--accent-hover); }
+  button[aria-pressed="true"] {
+    background: var(--accent);
+    color: var(--accent-fg);
+  }
+  button:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+  button:disabled:hover { background: transparent; color: var(--accent); }
+  button.primary:disabled:hover { background: var(--accent); color: var(--accent-fg); }
+
+  select {
+    min-height: 44px;
+    padding: 0.4rem 0.6rem;
+    border-radius: 8px;
+    border: 2px solid var(--border);
+    background: var(--card);
+  }
+
+  label.field-label {
+    display: block;
+    font-weight: 700;
+    margin-bottom: 0.4rem;
+  }
+  textarea {
+    width: 100%;
+    min-height: 180px;
+    padding: 0.9rem;
+    border-radius: 8px;
+    border: 2px solid var(--border);
+    background: var(--card);
+    color: var(--fg);
+    font: inherit;
+    font-size: 1.15rem;
+    line-height: 1.7;
+    resize: vertical;
+  }
+  textarea:focus-visible { border-color: var(--accent); }
+
+  .reading-display {
+    border: 2px solid var(--border);
+    border-radius: 8px;
+    padding: 1rem 1.1rem;
+    min-height: 140px;
+    font-size: var(--read-size);
+    line-height: 1.8;
+    background: var(--card);
+    color: var(--fg);
+    overflow-wrap: break-word;
+  }
+  .reading-display.letter-wide { letter-spacing: 0.12em; word-spacing: 0.25em; }
+  .reading-display.line-roomy { line-height: 2.3; }
+  .reading-display .word { border-radius: 4px; padding: 0 2px; }
+  .reading-display .word.active {
+    background: var(--highlight-bg);
+    color: var(--highlight-fg);
+    outline: 2px solid var(--highlight-fg);
+    outline-offset: 1px;
+  }
+  .reading-display .placeholder { color: var(--muted); font-size: 1rem; }
+
+  .player-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+    align-items: center;
+    margin-top: 1rem;
+  }
+  .speed-row {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+    margin-top: 1rem;
+  }
+  .speed-row output { font-weight: 700; min-width: 3ch; }
+  input[type="range"] { accent-color: var(--accent); min-width: 180px; }
+
+  .status {
+    margin-top: 1rem;
+    font-weight: 700;
+  }
+  .visually-hidden {
+    position: absolute;
+    width: 1px; height: 1px;
+    margin: -1px; padding: 0; border: 0;
+    clip: rect(0 0 0 0);
+    overflow: hidden;
+    white-space: nowrap;
+  }
+  footer { text-align: center; color: var(--muted); font-size: 0.95rem; margin-top: 2rem; }
+
+  @media (max-width: 560px) {
+    header.hero h1 { font-size: 1.9rem; }
+    .reading-display { font-size: var(--read-size); }
+    button { flex: 1 1 auto; }
+    .player-row button { flex: 1 1 30%; }
+  }
+</style>
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to main content — মূল বিষয়বস্তুতে যান</a>
+
+<header class="hero">
+  <div class="container">
+    <h1>Shobdo — শব্দ</h1>
+    <p>Accessible Reading for Everyone — সবার জন্য সহজ পড়া ও শোনা</p>
+  </div>
+</header>
+
+<main id="main" class="container">
+
+  <section aria-labelledby="about-heading">
+    <h2 id="about-heading">About — How it helps / কীভাবে সাহায্য করে</h2>
+    <p>Shobdo makes any text easier to <strong>read</strong> and <strong>hear</strong>. Paste or type Bangla or English text, press Play, and follow along word by word.</p>
+    <ul class="about-list">
+      <li><strong>Low vision:</strong> large text, high-contrast yellow-on-black theme, and read-aloud voice.</li>
+      <li><strong>Dyslexia:</strong> wider letter spacing and roomy line spacing reduce crowding between letters and lines.</li>
+      <li><strong>Elderly readers:</strong> big buttons, clear labels, adjustable speed, and simple controls.</li>
+      <li><strong>Bangla speakers:</strong> full Bangla voice support (bn-BD) alongside English (en-US).</li>
+    </ul>
+    <p class="muted">Everything runs in your browser. No account, no upload, no internet needed after the page loads — your text never leaves your device.</p>
+  </section>
+
+  <section aria-labelledby="access-heading">
+    <h2 id="access-heading">Accessibility controls — পড়া সহজ করার নিয়ন্ত্রণ</h2>
+
+    <div class="control-group">
+      <span class="group-label" id="font-label">Font size — অক্ষরের আকার</span>
+      <div class="control-grid" role="group" aria-labelledby="font-label">
+        <button type="button" id="font-small" aria-pressed="false">A− Small</button>
+        <button type="button" id="font-medium" aria-pressed="true">A Medium</button>
+        <button type="button" id="font-large" aria-pressed="false">A+ Large</button>
+      </div>
+    </div>
+
+    <div class="control-group">
+      <span class="group-label" id="theme-label">Theme — রং</span>
+      <div class="control-grid" role="group" aria-labelledby="theme-label">
+        <button type="button" id="theme-light" aria-pressed="true">☀️ Light</button>
+        <button type="button" id="theme-dark" aria-pressed="false">🌙 Dark</button>
+        <button type="button" id="theme-contrast" aria-pressed="false">◐ High Contrast</button>
+      </div>
+    </div>
+
+    <div class="control-group">
+      <span class="group-label" id="spacing-label">Spacing — ফাঁক (dyslexia-friendly)</span>
+      <div class="control-grid" role="group" aria-labelledby="spacing-label">
+        <button type="button" id="toggle-letter" aria-pressed="false">Wide letter spacing — অক্ষরের ফাঁক</button>
+        <button type="button" id="toggle-line" aria-pressed="false">Roomy line spacing — লাইনের ফাঁক</button>
+      </div>
+    </div>
+  </section>
+
+  <section aria-labelledby="text-heading">
+    <h2 id="text-heading">Your text — তোমার লেখা</h2>
+    <label class="field-label" for="input-text">Paste or type Bangla or English text here — বাংলা বা ইংরেজি লেখা এখানে লেখো বা বসাও</label>
+    <textarea id="input-text" rows="7" placeholder="এখানে লেখা লেখো… / Type or paste your text here…"></textarea>
+    <p class="muted" id="word-count" aria-live="polite">0 words</p>
+    <div class="control-grid">
+      <button type="button" id="sample-bn">📖 Bangla sample — বাংলা নমুনা</button>
+      <button type="button" id="sample-en">📖 English sample — ইংরেজি নমুনা</button>
+      <button type="button" id="clear-text">🗑️ Clear — মুছে ফেলো</button>
+    </div>
+  </section>
+
+  <section aria-labelledby="read-heading">
+    <h2 id="read-heading">Listen &amp; follow along — শোনো আর চোখে দেখো</h2>
+
+    <div class="control-grid">
+      <label class="field-label" for="lang-select" style="margin:0">Voice language — ভাষা</label>
+      <select id="lang-select">
+        <option value="bn-BD" selected>বাংলা (Bangla — bn-BD)</option>
+        <option value="en-US">English (en-US)</option>
+      </select>
+    </div>
+    <p class="muted">Tip: if your device has no Bangla voice installed, the browser may use its default voice for Bangla text.</p>
+
+    <div class="player-row" role="group" aria-label="Playback controls">
+      <button type="button" id="play-btn" class="primary">▶ Play — পড়ো</button>
+      <button type="button" id="pause-btn" disabled>⏸ Pause — থামো</button>
+      <button type="button" id="stop-btn" disabled>⏹ Stop — বন্ধ করো</button>
+    </div>
+
+    <div class="speed-row">
+      <label for="rate-input">Reading speed — পড়ার গতি</label>
+      <input type="range" id="rate-input" min="0.5" max="2" step="0.25" value="1" aria-describedby="rate-value">
+      <output id="rate-value" for="rate-input">1×</output>
+    </div>
+
+    <h3 id="display-label">Reading view — পড়ার জায়গা</h3>
+    <div class="reading-display" id="reading-display" role="region" aria-labelledby="display-label" tabindex="0">
+      <span class="placeholder">Your text will appear here, word by word, as it is read aloud. — পড়ার সময় এখানে প্রতিটা শব্দ একটা একটা করে আলো পাবে।</span>
+    </div>
+
+    <p class="status" id="status" aria-live="polite">Ready — প্রস্তুত।</p>
+    <p class="visually-hidden" id="sr-status" aria-live="polite"></p>
+  </section>
+
+</main>
+
+<footer>
+  <p>Shobdo — made for the Ctrl+V Hackathon. Built for everyone who reads differently.</p>
+</footer>
+
+<script>
+(function () {
+  'use strict';
+
+  var textarea = document.getElementById('input-text');
+  var display = document.getElementById('reading-display');
+  var wordCountEl = document.getElementById('word-count');
+  var statusEl = document.getElementById('status');
+  var srStatus = document.getElementById('sr-status');
+  var playBtn = document.getElementById('play-btn');
+  var pauseBtn = document.getElementById('pause-btn');
+  var stopBtn = document.getElementById('stop-btn');
+  var langSelect = document.getElementById('lang-select');
+  var rateInput = document.getElementById('rate-input');
+  var rateValue = document.getElementById('rate-value');
+
+  var SAMPLE_BN = 'বই পড়া মানুষের মনের জানালা খুলে দেয়। প্রতিটি বই নতুন এক জগতের দরজা খুলে দেয়, যেখানে আমরা নতুন কিছু শিখি আর নতুন মানুষের সাথে পরিচিত হই। যারা চোখে কম দেখেন, তাদের জন্যও পড়ার আনন্দ যেন থেমে না যায়। তাই বড় অক্ষর, স্পষ্ট উচ্চারণ আর সহজ নিয়ন্ত্রণ খুব দরকার। শব্দ সেই কাজটাই করে — লেখা বড় করে, শুনিয়ে দেয়, আর প্রতিটা শব্দ আলো দিয়ে দেখিয়ে দেয়।';
+  var SAMPLE_EN = 'Reading opens a window to new worlds. Every book teaches us something new and introduces us to people and ideas we have never met before. For people with low vision or dyslexia, reading should still be a joy. Large clear letters, a spoken voice, and simple controls can make all the difference. Shobdo does exactly that — it makes text bigger, reads it aloud, and lights up each word as it speaks.';
+
+  var supported = ('speechSynthesis' in window) && ('SpeechSynthesisUtterance' in window);
+  var words = []; // {text, start, end}
+  var currentWord = -1;
+  var speaking = false;
+  var paused = false;
+  var timerMode = false;
+  var timerId = null;
+  var timerStartAt = 0;
+  var timerStartIndex = 0;
+  var boundaryCheckId = null;
+  var boundarySeen = false;
+  var utterance = null;
+
+  function announce(msg) {
+    statusEl.textContent = msg;
+    srStatus.textContent = msg;
+  }
+
+  function escapeHtml(s) {
+    return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  function tokenize(text) {
+    var out = [];
+    var re = /\S+/g;
+    var m;
+    while ((m = re.exec(text)) !== null) {
+      out.push({ text: m[0], start: m.index, end: m.index + m[0].length });
+    }
+    return out;
+  }
+
+  function renderWords() {
+    if (!words.length) {
+      display.innerHTML = '<span class="placeholder">Your text will appear here, word by word, as it is read aloud. — পড়ার সময় এখানে প্রতিটা শব্দ একটা একটা করে আলো পাবে।</span>';
+      return;
+    }
+    var html = '';
+    for (var i = 0; i < words.length; i++) {
+      html += '<span class="word" data-i="' + i + '">' + escapeHtml(words[i].text) + '</span> ';
+    }
+    display.innerHTML = html;
+  }
+
+  function updateWordCount() {
+    var n = tokenize(textarea.value).length;
+    wordCountEl.textContent = n + (n === 1 ? ' word' : ' words');
+  }
+
+  function setWord(i) {
+    if (i < 0 || i >= words.length) return;
+    if (currentWord === i) return;
+    var prev = display.querySelector('.word.active');
+    if (prev) prev.classList.remove('active');
+    var el = display.querySelector('.word[data-i="' + i + '"]');
+    if (el) {
+      el.classList.add('active');
+      el.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    }
+    currentWord = i;
+  }
+
+  function clearHighlight() {
+    var prev = display.querySelector('.word.active');
+    if (prev) prev.classList.remove('active');
+    currentWord = -1;
+  }
+
+  function wordIndexAtChar(charIndex) {
+    for (var i = 0; i < words.length; i++) {
+      if (words[i].end > charIndex) return i;
+    }
+    return words.length - 1;
+  }
+
+  function wordsPerSecond() {
+    return 2.5 * parseFloat(rateInput.value || '1');
+  }
+
+  function startTimerMode() {
+    if (timerMode) return;
+    timerMode = true;
+    timerStartIndex = Math.max(currentWord, 0);
+    timerStartAt = Date.now();
+    clearInterval(timerId);
+    timerId = setInterval(function () {
+      var elapsed = (Date.now() - timerStartAt) / 1000;
+      var idx = timerStartIndex + Math.floor(elapsed * wordsPerSecond());
+      if (idx >= words.length) {
+        clearInterval(timerId);
+        return;
+      }
+      setWord(idx);
+    }, 120);
+  }
+
+  function stopTimer() {
+    clearInterval(timerId);
+    timerId = null;
+    timerMode = false;
+  }
+
+  function updateButtons() {
+    playBtn.disabled = !supported || speaking;
+    pauseBtn.disabled = !supported || !speaking;
+    stopBtn.disabled = !supported || !speaking;
+    pauseBtn.textContent = paused ? '▶ Resume — আবার চালাও' : '⏸ Pause — থামো';
+  }
+
+  function finishReading() {
+    stopTimer();
+    clearTimeout(boundaryCheckId);
+    speaking = false;
+    paused = false;
+    utterance = null;
+    updateButtons();
+  }
+
+  function stopCurrent() {
+    if (supported) window.speechSynthesis.cancel();
+    finishReading();
+    clearHighlight();
+  }
+
+  function pickVoice(lang) {
+    var voices = window.speechSynthesis.getVoices() || [];
+    var prefix = lang.slice(0, 2).toLowerCase();
+    var exact = null, near = null;
+    for (var i = 0; i < voices.length; i++) {
+      var vlang = (voices[i].lang || '').toLowerCase();
+      if (vlang === lang.toLowerCase()) { exact = voices[i]; break; }
+      if (!near && vlang.indexOf(prefix) === 0) near = voices[i];
+    }
+    return exact || near || null;
+  }
+
+  function play() {
+    if (!supported) {
+      announce('Sorry — speech is not supported in this browser. — দুঃখিত, এই ব্রাউজারে পড়ে শোনানো যাবে না।');
+      return;
+    }
+    var text = textarea.value.trim();
+    if (!text) {
+      announce('Please enter or choose some text first. — আগে কিছু লেখা লেখো বা নমুনা বেছে নাও।');
+      textarea.focus();
+      return;
+    }
+    stopCurrent();
+    words = tokenize(text);
+    renderWords();
+    updateWordCount();
+
+    var lang = langSelect.value;
+    utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = lang;
+    utterance.rate = parseFloat(rateInput.value || '1');
+    var voice = pickVoice(lang);
+    if (voice) utterance.voice = voice;
+
+    boundarySeen = false;
+    utterance.onboundary = function (e) {
+      if (e.charIndex == null) return;
+      boundarySeen = true;
+      setWord(wordIndexAtChar(e.charIndex));
+    };
+    utterance.onend = function () {
+      if (currentWord >= 0 && currentWord < words.length - 1) setWord(words.length - 1);
+      announce('Finished reading. — পড়া শেষ হয়েছে।');
+      finishReading();
+    };
+    utterance.onerror = function (e) {
+      if (e.error && e.error !== 'canceled' && e.error !== 'interrupted') {
+        announce('Speech error: ' + e.error);
+      }
+      finishReading();
+    };
+
+    window.speechSynthesis.speak(utterance);
+    speaking = true;
+    paused = false;
+    updateButtons();
+    announce('Reading started. — পড়া শুরু হয়েছে।');
+
+    // Fallback: some browsers/devices never fire onboundary events.
+    // If none arrives within 1.5s, highlight words on a timer instead.
+    clearTimeout(boundaryCheckId);
+    boundaryCheckId = setTimeout(function () {
+      if (speaking && !paused && !boundarySeen) startTimerMode();
+    }, 1500);
+  }
+
+  function togglePause() {
+    if (!speaking || !supported) return;
+    if (paused) {
+      window.speechSynthesis.resume();
+      paused = false;
+      if (timerMode) {
+        // restart the timer from the current word
+        timerMode = false;
+        startTimerMode();
+      }
+      announce('Resumed. — আবার চালু হয়েছে।');
+    } else {
+      window.speechSynthesis.pause();
+      paused = true;
+      stopTimer();
+      announce('Paused. — থেমে আছে।');
+    }
+    updateButtons();
+  }
+
+  function stop() {
+    if (!speaking) return;
+    stopCurrent();
+    announce('Stopped. — বন্ধ করা হয়েছে।');
+    updateButtons();
+  }
+
+  // --- controls ---
+  playBtn.addEventListener('click', play);
+  pauseBtn.addEventListener('click', togglePause);
+  stopBtn.addEventListener('click', stop);
+
+  langSelect.addEventListener('change', function () {
+    if (speaking) stopCurrent();
+  });
+
+  rateInput.addEventListener('input', function () {
+    rateValue.textContent = parseFloat(rateInput.value).toString().replace(/\.0$/, '') + '×';
+  });
+
+  document.getElementById('sample-bn').addEventListener('click', function () {
+    stopCurrent();
+    textarea.value = SAMPLE_BN;
+    words = tokenize(SAMPLE_BN);
+    renderWords();
+    updateWordCount();
+    langSelect.value = 'bn-BD';
+    announce('Bangla sample loaded. — বাংলা নমুনা বসানো হয়েছে।');
+    textarea.focus();
+  });
+
+  document.getElementById('sample-en').addEventListener('click', function () {
+    stopCurrent();
+    textarea.value = SAMPLE_EN;
+    words = tokenize(SAMPLE_EN);
+    renderWords();
+    updateWordCount();
+    langSelect.value = 'en-US';
+    announce('English sample loaded. — ইংরেজি নমুনা বসানো হয়েছে।');
+    textarea.focus();
+  });
+
+  document.getElementById('clear-text').addEventListener('click', function () {
+    stopCurrent();
+    textarea.value = '';
+    words = [];
+    renderWords();
+    updateWordCount();
+    announce('Cleared. — মুছে ফেলা হয়েছে।');
+    textarea.focus();
+  });
+
+  textarea.addEventListener('input', updateWordCount);
+
+  // Font size: small / medium / large
+  var fontSizes = { 'font-small': '1.15rem', 'font-medium': '1.5rem', 'font-large': '2rem' };
+  Object.keys(fontSizes).forEach(function (id) {
+    document.getElementById(id).addEventListener('click', function () {
+      document.documentElement.style.setProperty('--read-size', fontSizes[id]);
+      Object.keys(fontSizes).forEach(function (other) {
+        document.getElementById(other).setAttribute('aria-pressed', other === id ? 'true' : 'false');
+      });
+    });
+  });
+
+  // Themes
+  var themes = ['theme-light', 'theme-dark', 'theme-contrast'];
+  var themeValues = { 'theme-light': 'light', 'theme-dark': 'dark', 'theme-contrast': 'contrast' };
+  themes.forEach(function (id) {
+    document.getElementById(id).addEventListener('click', function () {
+      document.documentElement.setAttribute('data-theme', themeValues[id]);
+      themes.forEach(function (other) {
+        document.getElementById(other).setAttribute('aria-pressed', other === id ? 'true' : 'false');
+      });
+    });
+  });
+
+  // Spacing toggles
+  document.getElementById('toggle-letter').addEventListener('click', function () {
+    var on = display.classList.toggle('letter-wide');
+    this.setAttribute('aria-pressed', on ? 'true' : 'false');
+  });
+  document.getElementById('toggle-line').addEventListener('click', function () {
+    var on = display.classList.toggle('line-roomy');
+    this.setAttribute('aria-pressed', on ? 'true' : 'false');
+  });
+
+  // Voices load asynchronously in most browsers
+  if (supported && 'onvoiceschanged' in window.speechSynthesis) {
+    window.speechSynthesis.onvoiceschanged = function () { /* voices cached on demand */ };
+  }
+  if (!supported) {
+    announce('Sorry — speech is not supported in this browser. Text and display controls still work. — দুঃখিত, এই ব্রাউজারে পড়ে শোনানো যাবে না। লেখা আর দেখার নিয়ন্ত্রণগুলো চলবে।');
+    playBtn.disabled = true;
+    pauseBtn.disabled = true;
+    stopBtn.disabled = true;
+  }
+
+  updateWordCount();
+  updateButtons();
+})();
+</script>
+</body>
+</html>
