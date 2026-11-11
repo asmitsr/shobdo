@@ -21,7 +21,7 @@ Built for the **Ctrl+V Hackathon** (Devpost) — theme: *making access easier*.
 
 ## Run it
 
-Open `index.html` in any modern browser, or visit the live site. No build step, no install.
+Open `index.html` in any modern browser, or watch the [demo video](https://www.youtube.com/watch?v=4x_nwx1m2GU). No build step, no install.
 
 ## Tech
 
